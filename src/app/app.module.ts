@@ -7,8 +7,12 @@ import { LogInComponent } from './log-in/log-in.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HomeComponent } from './home/home.component';
 import { NavComponent } from './home/nav/nav.component';
-import { TodoListComponent } from './home/todo-list/todo-list.component';
 import { InfomationComponent } from './home/infomation/infomation.component';
+import { ProductListComponent } from './home/product-list/product-list.component';
+import { CartComponent } from './home/cart/cart.component';
+import { CreateEditProductComponent } from './home/create-edit-product/create-edit-product.component';
+import { HttpClientModule } from '@angular/common/http';
+import { StarComponent } from './home/product-list/star/star.component';
 
 @NgModule({
   declarations: [
@@ -16,14 +20,18 @@ import { InfomationComponent } from './home/infomation/infomation.component';
     LogInComponent,
     HomeComponent,
     NavComponent,
-    TodoListComponent,
     InfomationComponent,
+    ProductListComponent,
+    CartComponent,
+    CreateEditProductComponent,
+    StarComponent,
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    HttpClientModule
   ],
   providers: [],
   bootstrap: [AppComponent]

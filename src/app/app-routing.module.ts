@@ -3,8 +3,10 @@ import { RouterModule, Routes } from '@angular/router';
 import { LogInComponent } from './log-in/log-in.component';
 import { HomeComponent } from './home/home.component';
 import { AuthGuradService } from './auth/auth-gurad.service';
-import { TodoListComponent } from './home/todo-list/todo-list.component';
 import { InfomationComponent } from './home/infomation/infomation.component';
+import { ProductListComponent } from './home/product-list/product-list.component';
+import { CartComponent } from './home/cart/cart.component';
+import { CreateEditProductComponent } from './home/create-edit-product/create-edit-product.component';
 
 const routes: Routes = [
   {
@@ -20,14 +22,23 @@ const routes: Routes = [
     path: 'home',
     component: HomeComponent,
     children: [
+      { path: '', redirectTo: 'product-list',  pathMatch:'full' },
       {
-        path: 'todo-list',
-        component: TodoListComponent
+        path: 'product-list',
+        component: ProductListComponent
+      },
+      {
+        path: 'cart',
+        component: CartComponent
       },
       {
         path: 'infomation',
         component: InfomationComponent
-      }
+      },
+      {
+        path: 'create-product',
+        component: CreateEditProductComponent
+      },
     ],
     canActivate: [AuthGuradService]
   }
