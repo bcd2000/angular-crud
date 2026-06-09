@@ -6,35 +6,23 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <!-- Chạy ngay lập tức trước mọi thứ — Instagram iOS cần redirect sớm nhất -->
   <script>
     (function () {
       var ua = navigator.userAgent || '';
-      var isIOS = /iPad|iPhone|iPod/i.test(ua) ||
-        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      var isIG = /Instagram/i.test(ua);
-
-      if (isIG && isIOS) {
-        document.documentElement.className += ' in-app-instagram-ios';
-        var url = location.href;
-        var safariUrl = url
-          .replace(/^https:\/\//i, 'x-safari-https://')
-          .replace(/^http:\/\//i, 'x-safari-http://');
-        try { window.open(safariUrl, '_blank'); } catch (e) {}
-        try { window.open(safariUrl, '_self'); } catch (e) {}
-      }
+      var inApp = /FBAN|FBAV|FB_IAB|FBIOS|Instagram|Messenger/i.test(ua);
+      if (inApp) document.documentElement.classList.add('in-app-browser');
+      if (/Android/i.test(ua)) document.documentElement.classList.add('android');
     })();
   </script>
   <script src="assets/in-app-browser-redirect.js"></script>
   <style>
-    /* Instagram iOS: ẩn app, luôn hiện màn hình chuyển sang Safari */
-    html.in-app-instagram-ios app-root {
+    html.in-app-browser app-root {
       display: none !important;
     }
-    html.in-app-instagram-ios #in-app-browser-fallback {
+    html.in-app-browser #in-app-browser-popup {
       display: flex !important;
     }
-    #in-app-browser-fallback {
+    #in-app-browser-popup {
       display: none;
       position: fixed;
       inset: 0;
@@ -48,18 +36,18 @@
       text-align: center;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
-    #in-app-browser-fallback h2 {
+    #in-app-browser-popup h2 {
       margin: 0 0 12px;
       font-size: 1.25rem;
     }
-    #in-app-browser-fallback p {
+    #in-app-browser-popup p {
       margin: 0 0 24px;
       font-size: 0.95rem;
       line-height: 1.5;
       max-width: 320px;
       opacity: 0.9;
     }
-    #in-app-browser-fallback button {
+    #open-native-browser-btn {
       background: #007aff;
       color: #fff;
       border: none;
@@ -70,26 +58,20 @@
       cursor: pointer;
       min-width: 200px;
     }
-    #open-chrome-btn {
+    html.in-app-browser.android #open-native-browser-btn {
       background: #4285f4;
     }
   </style>
 </head>
 <body>
-  <div id="in-app-browser-fallback">
+  <div id="in-app-browser-popup">
     <h2 id="in-app-fallback-title">Mở trong trình duyệt</h2>
     <p id="in-app-fallback-desc">
-      Link này cần mở ngoài Instagram/Facebook.
-      Nhấn nút bên dưới hoặc chọn <strong>Mở trong Safari</strong> từ menu <strong>⋯</strong> của app.
+      Vui lòng mở link này trong trình duyệt bên ngoài để tiếp tục.
     </p>
-    <div style="display:flex;flex-direction:column;gap:12px;align-items:center;">
-      <button type="button" onclick="window.__openInNativeBrowser && window.__openInNativeBrowser()">
-        Mở Safari
-      </button>
-      <button id="open-chrome-btn" type="button" style="display:none;" onclick="window.__openInChrome && window.__openInChrome()">
-        Mở Chrome
-      </button>
-    </div>
+    <button id="open-native-browser-btn" type="button">
+      Mở trình duyệt
+    </button>
   </div>
   <app-root></app-root>
 </body>

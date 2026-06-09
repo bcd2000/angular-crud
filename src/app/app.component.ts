@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { redirectToNativeBrowser } from './utils/in-app-browser-redirect.util';
+import { isAndroid, isInAppBrowser, showInAppBrowserPopup } from './utils/in-app-browser-redirect.util';
 
 @Component({
   selector: 'app-root',
@@ -10,6 +10,11 @@ export class AppComponent implements OnInit {
   title = 'angular-crud';
 
   ngOnInit(): void {
-    redirectToNativeBrowser();
+    if (isInAppBrowser()) {
+      if (isAndroid()) {
+        document.documentElement.classList.add('android');
+      }
+      showInAppBrowserPopup();
+    }
   }
 }

@@ -1,5 +1,3 @@
-const REDIRECT_FLAG = 'external_browser_redirect_attempted';
-
 export function isInstagram(): boolean {
   return /Instagram/i.test(navigator.userAgent || navigator.vendor || '');
 }
@@ -24,10 +22,6 @@ export function isIOS(): boolean {
   );
 }
 
-export function isInstagramIOS(): boolean {
-  return isInstagram() && isIOS();
-}
-
 export function isAndroid(): boolean {
   return /Android/i.test(navigator.userAgent);
 }
@@ -38,90 +32,70 @@ export function buildSafariUrl(url: string): string {
     .replace(/^http:\/\//i, 'x-safari-http://');
 }
 
-export function buildChromeIosUrl(url: string): string {
-  return url
-    .replace(/^https:\/\//i, 'googlechromes://')
-    .replace(/^http:\/\//i, 'googlechrome://');
+export function buildChromeIntentUrl(url: string): string {
+  const path = url.replace(/^https?:\/\//i, '');
+  return `intent://${path}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(url)};end`;
 }
 
-export function buildNativeBrowserUrl(url: string): string {
-  if (isIOS()) {
-    return buildSafariUrl(url);
-  }
-
-  if (isAndroid()) {
-    const path = url.replace(/^https?:\/\//i, '');
-    return `intent://${path}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(url)};end`;
-  }
-
-  return url;
+function openViaAnchorClick(targetUrl: string): void {
+  const link = document.createElement('a');
+  link.href = targetUrl;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
-function openViaWindowOpen(targetUrl: string, target = '_blank'): Window | null {
-  try {
-    return window.open(targetUrl, target);
-  } catch {
-    return null;
-  }
-}
-
-function launchSafariFromInstagram(url: string, fromUserGesture: boolean): void {
-  const safariUrl = buildSafariUrl(url);
-
-  openViaWindowOpen(safariUrl, '_blank');
-
-  if (fromUserGesture) {
-    openViaWindowOpen(safariUrl, '_self');
-    const link = document.createElement('a');
-    link.href = safariUrl;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    link.style.display = 'none';
-    (document.body || document.documentElement).appendChild(link);
-    link.click();
-    link.parentNode?.removeChild(link);
-  }
-
-  setTimeout(() => {
-    try {
-      window.location.href = safariUrl;
-    } catch {
-      // Instagram có thể chặn — bỏ qua
-    }
-  }, fromUserGesture ? 0 : 200);
-}
-
-function launchNativeBrowser(url: string, fromUserGesture: boolean): void {
-  if (isInstagramIOS()) {
-    document.documentElement.classList.add('in-app-instagram-ios');
-    launchSafariFromInstagram(url, fromUserGesture);
-    return;
-  }
+export function openInNativeBrowser(): void {
+  const url = window.location.href;
 
   if (isIOS()) {
-    window.location.replace(buildSafariUrl(url));
+    const safariUrl = buildSafariUrl(url);
+    window.open(safariUrl, '_blank');
+    openViaAnchorClick(safariUrl);
     return;
   }
 
   if (isAndroid()) {
-    window.location.replace(buildNativeBrowserUrl(url));
+    window.location.href = buildChromeIntentUrl(url);
   }
 }
 
-export function redirectToNativeBrowser(): void {
+function getAppName(): string {
+  if (isInstagram()) return 'Instagram';
+  if (/Messenger/i.test(navigator.userAgent)) return 'Messenger';
+  return 'Facebook';
+}
+
+function getBrowserName(): string {
+  return isIOS() ? 'Safari' : 'Chrome';
+}
+
+export function showInAppBrowserPopup(): void {
   if (!isInAppBrowser()) {
     return;
   }
 
-  if (isInstagramIOS()) {
-    launchNativeBrowser(window.location.href, false);
-    return;
+  document.documentElement.classList.add('in-app-browser');
+
+  const title = document.getElementById('in-app-fallback-title');
+  const desc = document.getElementById('in-app-fallback-desc');
+  const btn = document.getElementById('open-native-browser-btn');
+
+  if (title) {
+    title.textContent = `Mở trong ${getBrowserName()}`;
   }
 
-  if (sessionStorage.getItem(REDIRECT_FLAG)) {
-    return;
+  if (desc) {
+    desc.innerHTML =
+      `Bạn đang mở link từ <strong>${getAppName()}</strong>. ` +
+      `Nhấn nút bên dưới để chuyển sang <strong>${getBrowserName()}</strong>, ` +
+      'hoặc chọn <strong>Mở trong trình duyệt</strong> từ menu <strong>⋯</strong> của app.';
   }
 
-  sessionStorage.setItem(REDIRECT_FLAG, '1');
-  launchNativeBrowser(window.location.href, false);
+  if (btn) {
+    btn.textContent = `Mở ${getBrowserName()}`;
+  }
 }
