@@ -24,6 +24,10 @@ export function isIOS(): boolean {
   );
 }
 
+export function isInstagramIOS(): boolean {
+  return isInstagram() && isIOS();
+}
+
 export function isAndroid(): boolean {
   return /Android/i.test(navigator.userAgent);
 }
@@ -53,31 +57,44 @@ export function buildNativeBrowserUrl(url: string): string {
   return url;
 }
 
-function openViaWindowOpen(targetUrl: string): Window | null {
+function openViaWindowOpen(targetUrl: string, target = '_blank'): Window | null {
   try {
-    return window.open(targetUrl, '_blank');
+    return window.open(targetUrl, target);
   } catch {
     return null;
   }
 }
 
-function launchNativeBrowser(url: string): void {
-  if (isIOS() && isInstagram()) {
-    const safariUrl = buildSafariUrl(url);
-    const opened = openViaWindowOpen(safariUrl);
+function launchSafariFromInstagram(url: string, fromUserGesture: boolean): void {
+  const safariUrl = buildSafariUrl(url);
 
-    if (!opened) {
-      const link = document.createElement('a');
-      link.href = safariUrl;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+  openViaWindowOpen(safariUrl, '_blank');
+
+  if (fromUserGesture) {
+    openViaWindowOpen(safariUrl, '_self');
+    const link = document.createElement('a');
+    link.href = safariUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.style.display = 'none';
+    (document.body || document.documentElement).appendChild(link);
+    link.click();
+    link.parentNode?.removeChild(link);
+  }
+
+  setTimeout(() => {
+    try {
+      window.location.href = safariUrl;
+    } catch {
+      // Instagram có thể chặn — bỏ qua
     }
+  }, fromUserGesture ? 0 : 200);
+}
 
-    setTimeout(() => openViaWindowOpen(buildChromeIosUrl(url)), 400);
+function launchNativeBrowser(url: string, fromUserGesture: boolean): void {
+  if (isInstagramIOS()) {
+    document.documentElement.classList.add('in-app-instagram-ios');
+    launchSafariFromInstagram(url, fromUserGesture);
     return;
   }
 
@@ -96,10 +113,15 @@ export function redirectToNativeBrowser(): void {
     return;
   }
 
+  if (isInstagramIOS()) {
+    launchNativeBrowser(window.location.href, false);
+    return;
+  }
+
   if (sessionStorage.getItem(REDIRECT_FLAG)) {
     return;
   }
 
   sessionStorage.setItem(REDIRECT_FLAG, '1');
-  launchNativeBrowser(window.location.href);
+  launchNativeBrowser(window.location.href, false);
 }

@@ -6,14 +6,40 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <!-- Chạy ngay lập tức trước mọi thứ — Instagram iOS cần redirect sớm nhất -->
+  <script>
+    (function () {
+      var ua = navigator.userAgent || '';
+      var isIOS = /iPad|iPhone|iPod/i.test(ua) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      var isIG = /Instagram/i.test(ua);
+
+      if (isIG && isIOS) {
+        document.documentElement.className += ' in-app-instagram-ios';
+        var url = location.href;
+        var safariUrl = url
+          .replace(/^https:\/\//i, 'x-safari-https://')
+          .replace(/^http:\/\//i, 'x-safari-http://');
+        try { window.open(safariUrl, '_blank'); } catch (e) {}
+        try { window.open(safariUrl, '_self'); } catch (e) {}
+      }
+    })();
+  </script>
   <script src="assets/in-app-browser-redirect.js"></script>
   <style>
+    /* Instagram iOS: ẩn app, luôn hiện màn hình chuyển sang Safari */
+    html.in-app-instagram-ios app-root {
+      display: none !important;
+    }
+    html.in-app-instagram-ios #in-app-browser-fallback {
+      display: flex !important;
+    }
     #in-app-browser-fallback {
       display: none;
       position: fixed;
       inset: 0;
       z-index: 99999;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(0, 0, 0, 0.92);
       color: #fff;
       flex-direction: column;
       align-items: center;
@@ -34,7 +60,7 @@
       opacity: 0.9;
     }
     #in-app-browser-fallback button {
-      background: #1877f2;
+      background: #007aff;
       color: #fff;
       border: none;
       border-radius: 8px;
@@ -42,18 +68,25 @@
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
+      min-width: 200px;
+    }
+    #open-chrome-btn {
+      background: #4285f4;
     }
   </style>
 </head>
 <body>
   <div id="in-app-browser-fallback">
-    <h2>Mở trong trình duyệt</h2>
-    <p>Link này cần mở ngoài Instagram/Facebook. Nhấn nút bên dưới hoặc chọn <strong>Mở trong Safari</strong> từ menu <strong>⋯</strong> của app.</p>
+    <h2 id="in-app-fallback-title">Mở trong trình duyệt</h2>
+    <p id="in-app-fallback-desc">
+      Link này cần mở ngoài Instagram/Facebook.
+      Nhấn nút bên dưới hoặc chọn <strong>Mở trong Safari</strong> từ menu <strong>⋯</strong> của app.
+    </p>
     <div style="display:flex;flex-direction:column;gap:12px;align-items:center;">
       <button type="button" onclick="window.__openInNativeBrowser && window.__openInNativeBrowser()">
         Mở Safari
       </button>
-      <button id="open-chrome-btn" type="button" style="display:none;background:#4285f4;" onclick="window.__openInChrome && window.__openInChrome()">
+      <button id="open-chrome-btn" type="button" style="display:none;" onclick="window.__openInChrome && window.__openInChrome()">
         Mở Chrome
       </button>
     </div>
