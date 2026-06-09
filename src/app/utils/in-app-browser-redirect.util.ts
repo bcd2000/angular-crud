@@ -1,12 +1,19 @@
 const REDIRECT_FLAG = 'external_browser_redirect_attempted';
 
-export function isInAppBrowser(): boolean {
+export function isInstagram(): boolean {
+  return /Instagram/i.test(navigator.userAgent || navigator.vendor || '');
+}
+
+export function isFacebookFamily(): boolean {
   const ua = navigator.userAgent || navigator.vendor || '';
   return (
     /FBAN|FBAV|FB_IAB|FBIOS/i.test(ua) ||
-    /Instagram/i.test(ua) ||
     /Messenger/i.test(ua)
   );
+}
+
+export function isInAppBrowser(): boolean {
+  return isInstagram() || isFacebookFamily();
 }
 
 export function isIOS(): boolean {
@@ -21,11 +28,21 @@ export function isAndroid(): boolean {
   return /Android/i.test(navigator.userAgent);
 }
 
+export function buildSafariUrl(url: string): string {
+  return url
+    .replace(/^https:\/\//i, 'x-safari-https://')
+    .replace(/^http:\/\//i, 'x-safari-http://');
+}
+
+export function buildChromeIosUrl(url: string): string {
+  return url
+    .replace(/^https:\/\//i, 'googlechromes://')
+    .replace(/^http:\/\//i, 'googlechrome://');
+}
+
 export function buildNativeBrowserUrl(url: string): string {
   if (isIOS()) {
-    return url
-      .replace(/^https:\/\//i, 'x-safari-https://')
-      .replace(/^http:\/\//i, 'x-safari-http://');
+    return buildSafariUrl(url);
   }
 
   if (isAndroid()) {
@@ -34,6 +51,44 @@ export function buildNativeBrowserUrl(url: string): string {
   }
 
   return url;
+}
+
+function openViaWindowOpen(targetUrl: string): Window | null {
+  try {
+    return window.open(targetUrl, '_blank');
+  } catch {
+    return null;
+  }
+}
+
+function launchNativeBrowser(url: string): void {
+  if (isIOS() && isInstagram()) {
+    const safariUrl = buildSafariUrl(url);
+    const opened = openViaWindowOpen(safariUrl);
+
+    if (!opened) {
+      const link = document.createElement('a');
+      link.href = safariUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    setTimeout(() => openViaWindowOpen(buildChromeIosUrl(url)), 400);
+    return;
+  }
+
+  if (isIOS()) {
+    window.location.replace(buildSafariUrl(url));
+    return;
+  }
+
+  if (isAndroid()) {
+    window.location.replace(buildNativeBrowserUrl(url));
+  }
 }
 
 export function redirectToNativeBrowser(): void {
@@ -46,5 +101,5 @@ export function redirectToNativeBrowser(): void {
   }
 
   sessionStorage.setItem(REDIRECT_FLAG, '1');
-  window.location.replace(buildNativeBrowserUrl(window.location.href));
+  launchNativeBrowser(window.location.href);
 }

@@ -48,10 +48,15 @@
 <body>
   <div id="in-app-browser-fallback">
     <h2>Mở trong trình duyệt</h2>
-    <p>Ứng dụng này cần mở trong Safari hoặc Chrome để hoạt động đúng. Nhấn nút bên dưới hoặc chọn "Mở trong trình duyệt" từ menu.</p>
-    <button type="button" onclick="window.__openInNativeBrowser && window.__openInNativeBrowser()">
-      Mở Safari / Chrome
-    </button>
+    <p>Link này cần mở ngoài Instagram/Facebook. Nhấn nút bên dưới hoặc chọn <strong>Mở trong Safari</strong> từ menu <strong>⋯</strong> của app.</p>
+    <div style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+      <button type="button" onclick="window.__openInNativeBrowser && window.__openInNativeBrowser()">
+        Mở Safari
+      </button>
+      <button id="open-chrome-btn" type="button" style="display:none;background:#4285f4;" onclick="window.__openInChrome && window.__openInChrome()">
+        Mở Chrome
+      </button>
+    </div>
   </div>
   <app-root></app-root>
 </body>
